@@ -1,5 +1,8 @@
 pipeline {
-  agent any
+    agent {
+        docker {
+            image 'node:20'
+        }
 
   environment {
     ACR_NAME       = 'octocatacr'
