@@ -1,5 +1,5 @@
 pipeline {
-    agent an
+    agent any
 
     environment {
         ACR_NAME       = 'octocatacr'
