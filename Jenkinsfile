@@ -78,6 +78,7 @@ pipeline {
                                 python3 -m pip install --user azure-cli
                                 export PATH="$HOME/.local/bin:$PATH"
                             elif command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
+                                rm -f /etc/apt/sources.list.d/azure-cli.list
                                 apt-get update
                                 apt-get install -y python3 python3-pip
                                 pip3 install --user azure-cli
@@ -131,6 +132,7 @@ pipeline {
                                 python3 -m pip install --user azure-cli
                                 export PATH="$HOME/.local/bin:$PATH"
                             elif command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
+                                rm -f /etc/apt/sources.list.d/azure-cli.list
                                 apt-get update
                                 apt-get install -y python3 python3-pip
                                 pip3 install --user azure-cli
