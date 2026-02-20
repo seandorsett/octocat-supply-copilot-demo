@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    options {
+        skipDefaultCheckout(true)
+    }
+
     environment {
         ACR_NAME       = 'octocatacr'
         IMAGE_NAME     = 'octocat-supply'
@@ -12,7 +16,8 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Checkout from Git
+                // Ensure a clean workspace and checkout from Git
+                deleteDir()
                 checkout scm
             }
         }
