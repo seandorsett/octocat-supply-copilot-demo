@@ -11,6 +11,7 @@ pipeline {
         IMAGE_TAG      = "${BUILD_NUMBER}"
         RESOURCE_GROUP = 'octocat-rg'
         WEBAPP_NAME    = 'octocat-supply-demo'
+        TENANT_ID      = 'b0d8e6c7-4f51-40f2-b45c-bae4fd843f5b'
     }
 
     stages {
@@ -57,27 +58,25 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build & Push Image in ACR') {
             steps {
-                sh """
-                    docker build \
-                        -t ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} .
-                """
-            }
-        }
-
-        stage('Push Image to ACR') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'acr-creds',
-                    usernameVariable: 'ACR_USER',
-                    passwordVariable: 'ACR_PASS'
-                )]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'azure-sp',
+                        usernameVariable: 'AZ_CLIENT_ID',
+                        passwordVariable: 'AZ_CLIENT_SECRET'
+                    )
+                ]) {
                     sh """
-                        docker login ${ACR_NAME}.azurecr.io \
-                            -u $ACR_USER -p $ACR_PASS
+                        az login --service-principal \
+                            -u $AZ_CLIENT_ID \
+                            -p $AZ_CLIENT_SECRET \
+                            --tenant ${TENANT_ID}
 
-                        docker push ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG}
+                        az acr build \
+                            --registry ${ACR_NAME} \
+                            --image ${IMAGE_NAME}:${IMAGE_TAG} \
+                            .
                     """
                 }
             }
@@ -102,7 +101,7 @@ pipeline {
                         az login --service-principal \
                             -u $AZ_CLIENT_ID \
                             -p $AZ_CLIENT_SECRET \
-                            --tenant <TENANT_ID>
+                            --tenant ${TENANT_ID}
 
                         az webapp config container set \
                             --resource-group ${RESOURCE_GROUP} \

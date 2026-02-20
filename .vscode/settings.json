@@ -1,0 +1,7 @@
+{
+    "chat.mcp.serverSampling": {
+        "octocat-supply-copilot-demo/.vscode/mcp.json: Azure MCP Server": {
+            "allowedDuringChat": true
+        }
+    }
+}
