@@ -23,8 +23,15 @@ pipeline {
         }
 
         stage('Install & Build Node App') {
+            agent {
+                docker {
+                    image 'node:20-alpine'
+                    reuseNode true
+                }
+            }
             steps {
-                // Ensure Node is installed on Jenkins host or container
+                sh 'node --version'
+                sh 'npm --version'
                 sh 'npm install'
                 sh 'npm run build'
             }
