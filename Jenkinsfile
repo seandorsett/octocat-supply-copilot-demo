@@ -71,23 +71,37 @@ pipeline {
                         set -eu
 
                         if ! command -v az >/dev/null 2>&1; then
-                            if command -v pip3 >/dev/null 2>&1; then
-                                pip3 install --user azure-cli
-                                export PATH="$HOME/.local/bin:$PATH"
-                            elif command -v python3 >/dev/null 2>&1; then
-                                python3 -m pip install --user azure-cli
-                                export PATH="$HOME/.local/bin:$PATH"
-                            elif command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
-                                rm -f /etc/apt/sources.list.d/azure-cli.list
-                                apt-get update
-                                apt-get install -y python3 python3-pip
-                                pip3 install --user azure-cli
-                                export PATH="$HOME/.local/bin:$PATH"
-                            else
-                                echo "Azure CLI is required, but this agent has no az, pip3, or python3, and is not root for apt-get installation."
-                                echo "Fix by using a Jenkins image that preinstalls azure-cli (recommended), or install python3+pip3 in the agent image."
-                                exit 1
+                            if ! command -v python3 >/dev/null 2>&1; then
+                                if command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
+                                    rm -f /etc/apt/sources.list.d/azure-cli.list
+                                    apt-get update
+                                    apt-get install -y python3 python3-venv
+                                else
+                                    echo "Azure CLI is required, but python3 is not available and this agent cannot install packages."
+                                    echo "Fix by using a Jenkins image that preinstalls azure-cli (recommended), or install python3+python3-venv in the agent image."
+                                    exit 1
+                                fi
                             fi
+
+                            if ! python3 -m venv --help >/dev/null 2>&1; then
+                                if command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
+                                    apt-get update
+                                    apt-get install -y python3-venv
+                                else
+                                    echo "python3-venv is required to install Azure CLI in an isolated environment."
+                                    echo "Install python3-venv in the Jenkins agent image."
+                                    exit 1
+                                fi
+                            fi
+
+                            AZ_VENV="$PWD/.tools/azcli-venv"
+                            if [ ! -x "$AZ_VENV/bin/az" ]; then
+                                python3 -m venv "$AZ_VENV"
+                                "$AZ_VENV/bin/python" -m pip install --upgrade pip
+                                "$AZ_VENV/bin/pip" install azure-cli
+                            fi
+
+                            export PATH="$AZ_VENV/bin:$PATH"
                         fi
 
                         az version
@@ -125,23 +139,37 @@ pipeline {
                         set -eu
 
                         if ! command -v az >/dev/null 2>&1; then
-                            if command -v pip3 >/dev/null 2>&1; then
-                                pip3 install --user azure-cli
-                                export PATH="$HOME/.local/bin:$PATH"
-                            elif command -v python3 >/dev/null 2>&1; then
-                                python3 -m pip install --user azure-cli
-                                export PATH="$HOME/.local/bin:$PATH"
-                            elif command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
-                                rm -f /etc/apt/sources.list.d/azure-cli.list
-                                apt-get update
-                                apt-get install -y python3 python3-pip
-                                pip3 install --user azure-cli
-                                export PATH="$HOME/.local/bin:$PATH"
-                            else
-                                echo "Azure CLI is required, but this agent has no az, pip3, or python3, and is not root for apt-get installation."
-                                echo "Fix by using a Jenkins image that preinstalls azure-cli (recommended), or install python3+pip3 in the agent image."
-                                exit 1
+                            if ! command -v python3 >/dev/null 2>&1; then
+                                if command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
+                                    rm -f /etc/apt/sources.list.d/azure-cli.list
+                                    apt-get update
+                                    apt-get install -y python3 python3-venv
+                                else
+                                    echo "Azure CLI is required, but python3 is not available and this agent cannot install packages."
+                                    echo "Fix by using a Jenkins image that preinstalls azure-cli (recommended), or install python3+python3-venv in the agent image."
+                                    exit 1
+                                fi
                             fi
+
+                            if ! python3 -m venv --help >/dev/null 2>&1; then
+                                if command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
+                                    apt-get update
+                                    apt-get install -y python3-venv
+                                else
+                                    echo "python3-venv is required to install Azure CLI in an isolated environment."
+                                    echo "Install python3-venv in the Jenkins agent image."
+                                    exit 1
+                                fi
+                            fi
+
+                            AZ_VENV="$PWD/.tools/azcli-venv"
+                            if [ ! -x "$AZ_VENV/bin/az" ]; then
+                                python3 -m venv "$AZ_VENV"
+                                "$AZ_VENV/bin/python" -m pip install --upgrade pip
+                                "$AZ_VENV/bin/pip" install azure-cli
+                            fi
+
+                            export PATH="$AZ_VENV/bin:$PATH"
                         fi
 
                         az login --service-principal \
