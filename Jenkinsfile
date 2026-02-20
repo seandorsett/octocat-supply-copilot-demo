@@ -5,6 +5,10 @@ pipeline {
         skipDefaultCheckout(true)
     }
 
+    tools {
+        nodejs 'NodeJS_20'
+    }
+
     environment {
         ACR_NAME       = 'octocatacr'
         IMAGE_NAME     = 'octocat-supply'
@@ -23,12 +27,6 @@ pipeline {
         }
 
         stage('Install & Build Node App') {
-            agent {
-                docker {
-                    image 'node:20-alpine'
-                    reuseNode true
-                }
-            }
             steps {
                 sh 'node --version'
                 sh 'npm --version'
