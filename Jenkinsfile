@@ -67,17 +67,33 @@ pipeline {
                         passwordVariable: 'AZ_CLIENT_SECRET'
                     )
                 ]) {
-                    sh """
+                    sh '''
+                        set -eu
+
+                        if ! command -v az >/dev/null 2>&1; then
+                            if command -v pip3 >/dev/null 2>&1; then
+                                pip3 install --user azure-cli
+                            elif command -v python3 >/dev/null 2>&1; then
+                                python3 -m pip install --user azure-cli
+                            else
+                                echo "Azure CLI is required but neither pip3 nor python3 is available"
+                                exit 1
+                            fi
+                            export PATH="$HOME/.local/bin:$PATH"
+                        fi
+
+                        az version
+
                         az login --service-principal \
-                            -u $AZ_CLIENT_ID \
-                            -p $AZ_CLIENT_SECRET \
-                            --tenant ${TENANT_ID}
+                            -u "$AZ_CLIENT_ID" \
+                            -p "$AZ_CLIENT_SECRET" \
+                            --tenant "$TENANT_ID"
 
                         az acr build \
-                            --registry ${ACR_NAME} \
-                            --image ${IMAGE_NAME}:${IMAGE_TAG} \
+                            --registry "$ACR_NAME" \
+                            --image "$IMAGE_NAME:$IMAGE_TAG" \
                             .
-                    """
+                    '''
                 }
             }
         }
@@ -97,20 +113,34 @@ pipeline {
                         passwordVariable: 'ACR_PASS'
                     )
                 ]) {
-                    sh """
+                    sh '''
+                        set -eu
+
+                        if ! command -v az >/dev/null 2>&1; then
+                            if command -v pip3 >/dev/null 2>&1; then
+                                pip3 install --user azure-cli
+                            elif command -v python3 >/dev/null 2>&1; then
+                                python3 -m pip install --user azure-cli
+                            else
+                                echo "Azure CLI is required but neither pip3 nor python3 is available"
+                                exit 1
+                            fi
+                            export PATH="$HOME/.local/bin:$PATH"
+                        fi
+
                         az login --service-principal \
-                            -u $AZ_CLIENT_ID \
-                            -p $AZ_CLIENT_SECRET \
-                            --tenant ${TENANT_ID}
+                            -u "$AZ_CLIENT_ID" \
+                            -p "$AZ_CLIENT_SECRET" \
+                            --tenant "$TENANT_ID"
 
                         az webapp config container set \
-                            --resource-group ${RESOURCE_GROUP} \
-                            --name ${WEBAPP_NAME} \
-                            --docker-custom-image-name ${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${IMAGE_TAG} \
-                            --docker-registry-server-url https://${ACR_NAME}.azurecr.io \
-                            --docker-registry-server-user $ACR_USER \
-                            --docker-registry-server-password $ACR_PASS
-                    """
+                            --resource-group "$RESOURCE_GROUP" \
+                            --name "$WEBAPP_NAME" \
+                            --docker-custom-image-name "$ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG" \
+                            --docker-registry-server-url "https://$ACR_NAME.azurecr.io" \
+                            --docker-registry-server-user "$ACR_USER" \
+                            --docker-registry-server-password "$ACR_PASS"
+                    '''
                 }
             }
         }
