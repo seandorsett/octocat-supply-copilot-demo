@@ -70,6 +70,8 @@ pipeline {
                     sh '''
                         set -eu
 
+                        AZ_BIN="$(command -v az 2>/dev/null || true)"
+
                         if ! command -v az >/dev/null 2>&1; then
                             if ! command -v python3 >/dev/null 2>&1; then
                                 if command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
@@ -83,8 +85,9 @@ pipeline {
                                 fi
                             fi
 
-                            AZ_VENV="$PWD/.tools/azcli-venv"
-                            if [ ! -x "$AZ_VENV/bin/az" ]; then
+                            AZ_VENV="$HOME/.azcli-venv"
+                            AZ_BIN="$AZ_VENV/bin/az"
+                            if [ ! -x "$AZ_BIN" ]; then
                                 rm -rf "$AZ_VENV"
                                 if ! python3 -m venv "$AZ_VENV"; then
                                     if command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
@@ -101,18 +104,21 @@ pipeline {
                                 "$AZ_VENV/bin/python" -m pip install --upgrade pip
                                 "$AZ_VENV/bin/pip" install azure-cli
                             fi
-
-                            export PATH="$AZ_VENV/bin:$PATH"
                         fi
 
-                        az version
+                        if [ -z "$AZ_BIN" ]; then
+                            echo "Azure CLI executable could not be resolved after installation."
+                            exit 1
+                        fi
 
-                        az login --service-principal \
+                        "$AZ_BIN" version
+
+                        "$AZ_BIN" login --service-principal \
                             -u "$AZ_CLIENT_ID" \
                             -p "$AZ_CLIENT_SECRET" \
                             --tenant "$TENANT_ID"
 
-                        az acr build \
+                        "$AZ_BIN" acr build \
                             --registry "$ACR_NAME" \
                             --image "$IMAGE_NAME:$IMAGE_TAG" \
                             .
@@ -139,6 +145,8 @@ pipeline {
                     sh '''
                         set -eu
 
+                        AZ_BIN="$(command -v az 2>/dev/null || true)"
+
                         if ! command -v az >/dev/null 2>&1; then
                             if ! command -v python3 >/dev/null 2>&1; then
                                 if command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
@@ -152,8 +160,9 @@ pipeline {
                                 fi
                             fi
 
-                            AZ_VENV="$PWD/.tools/azcli-venv"
-                            if [ ! -x "$AZ_VENV/bin/az" ]; then
+                            AZ_VENV="$HOME/.azcli-venv"
+                            AZ_BIN="$AZ_VENV/bin/az"
+                            if [ ! -x "$AZ_BIN" ]; then
                                 rm -rf "$AZ_VENV"
                                 if ! python3 -m venv "$AZ_VENV"; then
                                     if command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
@@ -170,16 +179,19 @@ pipeline {
                                 "$AZ_VENV/bin/python" -m pip install --upgrade pip
                                 "$AZ_VENV/bin/pip" install azure-cli
                             fi
-
-                            export PATH="$AZ_VENV/bin:$PATH"
                         fi
 
-                        az login --service-principal \
+                        if [ -z "$AZ_BIN" ]; then
+                            echo "Azure CLI executable could not be resolved after installation."
+                            exit 1
+                        fi
+
+                        "$AZ_BIN" login --service-principal \
                             -u "$AZ_CLIENT_ID" \
                             -p "$AZ_CLIENT_SECRET" \
                             --tenant "$TENANT_ID"
 
-                        az webapp config container set \
+                        "$AZ_BIN" webapp config container set \
                             --resource-group "$RESOURCE_GROUP" \
                             --name "$WEBAPP_NAME" \
                             --docker-custom-image-name "$ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG" \
