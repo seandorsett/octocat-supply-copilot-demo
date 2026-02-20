@@ -73,13 +73,25 @@ pipeline {
                         if ! command -v az >/dev/null 2>&1; then
                             if command -v pip3 >/dev/null 2>&1; then
                                 pip3 install --user azure-cli
+                                export PATH="$HOME/.local/bin:$PATH"
                             elif command -v python3 >/dev/null 2>&1; then
                                 python3 -m pip install --user azure-cli
+                                export PATH="$HOME/.local/bin:$PATH"
+                            elif command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
+                                apt-get update
+                                apt-get install -y ca-certificates curl apt-transport-https lsb-release gnupg
+                                mkdir -p /etc/apt/keyrings
+                                curl -sLS https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/keyrings/microsoft.gpg
+                                chmod go+r /etc/apt/keyrings/microsoft.gpg
+                                AZ_REPO=$(lsb_release -cs)
+                                echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/azure-cli/ ${AZ_REPO} main" > /etc/apt/sources.list.d/azure-cli.list
+                                apt-get update
+                                apt-get install -y azure-cli
                             else
-                                echo "Azure CLI is required but neither pip3 nor python3 is available"
+                                echo "Azure CLI is required, but this agent has no az, pip3, or python3, and is not root for apt-get installation."
+                                echo "Fix by using a Jenkins image that preinstalls azure-cli (recommended), or install python3+pip3 in the agent image."
                                 exit 1
                             fi
-                            export PATH="$HOME/.local/bin:$PATH"
                         fi
 
                         az version
@@ -119,13 +131,25 @@ pipeline {
                         if ! command -v az >/dev/null 2>&1; then
                             if command -v pip3 >/dev/null 2>&1; then
                                 pip3 install --user azure-cli
+                                export PATH="$HOME/.local/bin:$PATH"
                             elif command -v python3 >/dev/null 2>&1; then
                                 python3 -m pip install --user azure-cli
+                                export PATH="$HOME/.local/bin:$PATH"
+                            elif command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
+                                apt-get update
+                                apt-get install -y ca-certificates curl apt-transport-https lsb-release gnupg
+                                mkdir -p /etc/apt/keyrings
+                                curl -sLS https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/keyrings/microsoft.gpg
+                                chmod go+r /etc/apt/keyrings/microsoft.gpg
+                                AZ_REPO=$(lsb_release -cs)
+                                echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/azure-cli/ ${AZ_REPO} main" > /etc/apt/sources.list.d/azure-cli.list
+                                apt-get update
+                                apt-get install -y azure-cli
                             else
-                                echo "Azure CLI is required but neither pip3 nor python3 is available"
+                                echo "Azure CLI is required, but this agent has no az, pip3, or python3, and is not root for apt-get installation."
+                                echo "Fix by using a Jenkins image that preinstalls azure-cli (recommended), or install python3+pip3 in the agent image."
                                 exit 1
                             fi
-                            export PATH="$HOME/.local/bin:$PATH"
                         fi
 
                         az login --service-principal \
