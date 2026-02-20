@@ -33,17 +33,17 @@ pipeline {
                         mkdir -p .tools
 
                         if [ ! -x ".tools/${NODE_DIST}/bin/node" ]; then
-                            rm -rf ".tools/${NODE_DIST}" ".tools/${NODE_DIST}.tar.xz"
+                            rm -rf ".tools/${NODE_DIST}" ".tools/${NODE_DIST}.tar.gz"
                             if command -v curl >/dev/null 2>&1; then
-                                curl -fsSL "https://nodejs.org/dist/${NODE_VERSION}/${NODE_DIST}.tar.xz" -o ".tools/${NODE_DIST}.tar.xz"
+                                curl -fsSL "https://nodejs.org/dist/${NODE_VERSION}/${NODE_DIST}.tar.gz" -o ".tools/${NODE_DIST}.tar.gz"
                             elif command -v wget >/dev/null 2>&1; then
-                                wget -q "https://nodejs.org/dist/${NODE_VERSION}/${NODE_DIST}.tar.xz" -O ".tools/${NODE_DIST}.tar.xz"
+                                wget -q "https://nodejs.org/dist/${NODE_VERSION}/${NODE_DIST}.tar.gz" -O ".tools/${NODE_DIST}.tar.gz"
                             else
                                 echo "Neither curl nor wget is available to download Node.js"
                                 exit 1
                             fi
 
-                            tar -xJf ".tools/${NODE_DIST}.tar.xz" -C .tools
+                            tar -xzf ".tools/${NODE_DIST}.tar.gz" -C .tools
                         fi
 
                         export PATH="$PWD/.tools/${NODE_DIST}/bin:$PATH"
