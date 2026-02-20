@@ -5,10 +5,6 @@ pipeline {
         skipDefaultCheckout(true)
     }
 
-    tools {
-        nodejs 'NodeJS_20'
-    }
-
     environment {
         ACR_NAME       = 'octocatacr'
         IMAGE_NAME     = 'octocat-supply'
@@ -28,10 +24,36 @@ pipeline {
 
         stage('Install & Build Node App') {
             steps {
-                sh 'node --version'
-                sh 'npm --version'
-                sh 'npm install'
-                sh 'npm run build'
+                sh '''
+                    set -eu
+
+                    if ! command -v node >/dev/null 2>&1; then
+                        NODE_VERSION="v20.19.0"
+                        NODE_DIST="node-${NODE_VERSION}-linux-x64"
+                        mkdir -p .tools
+
+                        if [ ! -x ".tools/${NODE_DIST}/bin/node" ]; then
+                            rm -rf ".tools/${NODE_DIST}" ".tools/${NODE_DIST}.tar.xz"
+                            if command -v curl >/dev/null 2>&1; then
+                                curl -fsSL "https://nodejs.org/dist/${NODE_VERSION}/${NODE_DIST}.tar.xz" -o ".tools/${NODE_DIST}.tar.xz"
+                            elif command -v wget >/dev/null 2>&1; then
+                                wget -q "https://nodejs.org/dist/${NODE_VERSION}/${NODE_DIST}.tar.xz" -O ".tools/${NODE_DIST}.tar.xz"
+                            else
+                                echo "Neither curl nor wget is available to download Node.js"
+                                exit 1
+                            fi
+
+                            tar -xJf ".tools/${NODE_DIST}.tar.xz" -C .tools
+                        fi
+
+                        export PATH="$PWD/.tools/${NODE_DIST}/bin:$PATH"
+                    fi
+
+                    node --version
+                    npm --version
+                    npm install
+                    npm run build
+                '''
             }
         }
 
