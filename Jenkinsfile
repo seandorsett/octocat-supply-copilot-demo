@@ -83,20 +83,21 @@ pipeline {
                                 fi
                             fi
 
-                            if ! python3 -m venv --help >/dev/null 2>&1; then
-                                if command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
-                                    apt-get update
-                                    apt-get install -y python3-venv
-                                else
-                                    echo "python3-venv is required to install Azure CLI in an isolated environment."
-                                    echo "Install python3-venv in the Jenkins agent image."
-                                    exit 1
-                                fi
-                            fi
-
                             AZ_VENV="$PWD/.tools/azcli-venv"
                             if [ ! -x "$AZ_VENV/bin/az" ]; then
-                                python3 -m venv "$AZ_VENV"
+                                rm -rf "$AZ_VENV"
+                                if ! python3 -m venv "$AZ_VENV"; then
+                                    if command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
+                                        rm -f /etc/apt/sources.list.d/azure-cli.list
+                                        apt-get update
+                                        apt-get install -y python3-venv
+                                        python3 -m venv "$AZ_VENV"
+                                    else
+                                        echo "python3-venv (with ensurepip) is required to install Azure CLI in an isolated environment."
+                                        echo "Install python3-venv in the Jenkins agent image."
+                                        exit 1
+                                    fi
+                                fi
                                 "$AZ_VENV/bin/python" -m pip install --upgrade pip
                                 "$AZ_VENV/bin/pip" install azure-cli
                             fi
@@ -151,20 +152,21 @@ pipeline {
                                 fi
                             fi
 
-                            if ! python3 -m venv --help >/dev/null 2>&1; then
-                                if command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
-                                    apt-get update
-                                    apt-get install -y python3-venv
-                                else
-                                    echo "python3-venv is required to install Azure CLI in an isolated environment."
-                                    echo "Install python3-venv in the Jenkins agent image."
-                                    exit 1
-                                fi
-                            fi
-
                             AZ_VENV="$PWD/.tools/azcli-venv"
                             if [ ! -x "$AZ_VENV/bin/az" ]; then
-                                python3 -m venv "$AZ_VENV"
+                                rm -rf "$AZ_VENV"
+                                if ! python3 -m venv "$AZ_VENV"; then
+                                    if command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
+                                        rm -f /etc/apt/sources.list.d/azure-cli.list
+                                        apt-get update
+                                        apt-get install -y python3-venv
+                                        python3 -m venv "$AZ_VENV"
+                                    else
+                                        echo "python3-venv (with ensurepip) is required to install Azure CLI in an isolated environment."
+                                        echo "Install python3-venv in the Jenkins agent image."
+                                        exit 1
+                                    fi
+                                fi
                                 "$AZ_VENV/bin/python" -m pip install --upgrade pip
                                 "$AZ_VENV/bin/pip" install azure-cli
                             fi
